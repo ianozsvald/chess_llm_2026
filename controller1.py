@@ -1,9 +1,9 @@
 import random
 
 from stockfish import Stockfish
-from trial_openai import call_llm
 
 import utils
+from llm_openai import call_llm
 
 SF_PATH = "/usr/games/stockfish"
 
@@ -41,11 +41,17 @@ class SFBadBot:
 
 class LLM1:
     def __init__(self):
-        pass
+        # we need a stockfish to describe the board state
+        sfi = Stockfish(path=SF_PATH)
+        self.sfi = sfi
 
     def get_next_move(self, moves):
         assert not is_even(len(moves))
-        mv = call_llm("black", moves)
+        self.sfi.set_position(moves)
+        # get a board position like
+        # 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+        fen = self.sfi.get_fen_position()
+        mv = call_llm("black", moves, fen=fen)
         return mv
 
 
