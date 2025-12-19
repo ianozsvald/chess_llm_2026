@@ -1,0 +1,137 @@
+import sys
+import random
+from stockfish import Stockfish
+from trial_openai import call_llm
+import utils
+
+SF_PATH = "/usr/games/stockfish"
+
+# get_evaluation - type cp and a value, or mate and value, mate value 0 is end?
+
+moves_end_white_win = ['c2c4', 'e7e5', 'a2a3', 'c7c6', 'd1c2', 'g8e7', 'g1f3', 'e7g6', 'b1c3', 'd7d6', 'g2g3', 'f8e7', 'd2d3', 'a7a5', 'h2h4', 'c8g4', 'f3h2', 'g4h5', 'g3g4', 'h5g4', 'h1g1', 'g4e6', 'h4h5', 'g6f8', 'c1e3', 'b8a6', 'h2f3', 'h8g8', 'e1c1', 'f8d7', 'd3d4', 'e5d4', 'c2h7', 'd7f6', 'h7g8', 'e7f8', 'g8h8', 'd4e3', 'g1g3', 'a6c5', 'f2e3', 'e6f5', 'f3d2', 'c5e6', 'g3f3', 'f5g4', 'f3g3', 'd8e7', 'e3e4', 'g4h5', 'f1h3', 'e6f4', 'd1f1', 'f4g6', 'g3g6', 'f7g6', 'c1c2', 'g6g5', 'f1f6', 'h5f7', 'f6f5', 'g7g6', 'f5f2', 'f7e6', 'h3e6', 'e7g7', 'e6f7', 'g7f7', 'f2f6', 'f7g7', 'h8g7', 'f8g7', 'f6f3', 'g5g4', 'f3g3', 'g7c3', 'b2c3', 'e8c8', 'g3g1', 'd8h8', 'g1g2', 'a5a4', 'c4c5', 'g6g5', 'g2g3', 'h8h2', 'c2d3', 'h2h1', 'g3g4', 'h1h3', 'd3c2', 'd6d5', 'g4g5', 'd5e4', 'g5g8', 'c8c7', 'g8g7', 'c7c8', 'd2c4', 'c8b8', 'c4d6', 'h3h2', 'c2d2', 'h2h3', 'g7e7', 'h3h8', 'e7e4', 'h8d8', 'e4e6', 'b7b5', 'd2c2', 'd8g8', 'e6e4', 'b8c7', 'e4e6', 'c7d7', 'e6e4', 'd7d8', 'e4d4', 'd8c7', 'd4e4', 'b5b4', 'e4b4', 'c7d7', 'b4a4', 'g8g2', 'a4e4', 'g2g1', 'd6f7', 'g1g3', 'f7d6', 'g3g5', 'd6b7', 'g5g8', 'e4a4', 'g8g2', 'a4e4', 'g2g6', 'e4d4', 'd7c8', 'b7a5', 'c8c7', 'd4b4', 'g6e6', 'c2d2', 'e6e8', 'e2e4', 'e8g8', 'd2d3', 'g8g5', 'd3d4', 'g5g6', 'b4b1', 'g6h6', 'a5c6', 'h6c6', 'a3a4', 'c6a6', 'b1a1', 'a6g6', 'a1f1', 'g6h6', 'd4c4', 'h6h4', 'c4b5', 'h4e4', 'f1f5', 'e4e1', 'f5f7', 'c7d8', 'f7f8', 'd8e7', 'f8g8', 'e1c1', 'g8g7', 'e7f8', 'g7g4', 'f8e8', 'b5c6', 'e8d8', 'g4b4', 'd8c8', 'b4f4', 'c1d1', 'f4f8', 'd1d8', 'f8d8', 'c8d8', 'c6b6', 'd8e7', 'c5c6', 'e7d6', 'c6c7', 'd6d7', 'b6b7', 'd7e6', 'c7c8q', 'e6f7', 'c3c4', 'f7g7', 'b7c6', 'g7h7', 'c8e6', 'h7h8', 'a4a5', 'h8h7', 'a5a6', 'h7g7', 'a6a7', 'g7h7', 'a7a8q', 'h7g7', 'a8b7', 'g7f8', 'e6f7'] # sf_checker.get_evaluation() {'type': 'mate', 'value': 0}, 215 moves
+# so I think mate-in of 0 means mate, mate-in 1 etc means mate in that nbr moves
+
+moves_end_white_win2 = ['e2e4', 'e7e5', 'b1c3', 'f8c5', 'd1h5', 'd7d6', 'f1c4', 'g7g6', 'h5e2', 'g8f6', 'g1f3', 'c8g4', 'h2h3', 'g4d7', 'f3g5', 'e8g8', 'g5f3', 'c7c6', 'a2a4', 'f6h5', 'g2g4', 'h5f4', 'e2f1', 'a7a6', 'd2d4', 'e5d4', 'c1f4', 'd8a5', 'f4d2', 'b7b5', 'c3e2', 'a5c7', 'c4d3', 'f8e8', 'e1d1', 'c5b6', 'a4b5', 'a6a5', 'f3g5', 'a5a4', 'e2f4', 'h7h6', 'g5f3', 'c6b5', 'f1g2', 'g6g5', 'f4d5', 'c7c5', 'd2c1', 'b6d8', 'h3h4', 'a4a3', 'b2b4', 'c5c8', 'a1a2', 'd7e6', 'd3b5', 'b8d7', 'f3d4', 'f7f6', 'd4e6', 'd8e7', 'e6c7', 'c8b7', 'b5d7', 'e7d8', 'c7e8', 'b7d7', 'e8f6', 'g8g7', 'f6d7', 'a8a7', 'd5b6', 'a7b7', 'e4e5', 'd8b6', 'g2b7', 'b6f2', 'e5d6', 'g5h4', 'd7e5', 'g7f6']
+
+class SF():
+    def __init__(self, skill_level=1):
+        sf_params = {'Skill Level': skill_level}
+        sfi = Stockfish(path=SF_PATH, parameters=sf_params)
+        self.sfi = sfi
+
+    def get_next_move(self, moves):
+        self.sfi.set_position(moves)
+        mv = self.sfi.get_best_move()
+        print(f"SF proposes: {mv}")
+        return mv
+
+
+class SFBadBot():
+    """Makes random or bad moves"""
+    def __init__(self, skill_level=1):
+        sf_params = {'Skill Level': skill_level}
+        sfi = Stockfish(path=SF_PATH, parameters=sf_params)
+        self.sfi = sfi
+
+    def get_next_move(self, moves):
+        #self.sfi.set_position(moves)
+        #mv = self.sfi.get_best_move()
+        mv = "nuffin"
+        print(f"SFBadBot proposes: {mv}")
+        return mv
+
+
+class LLM1():
+    def __init__(self):
+        pass
+    def get_next_move(self, moves):
+        assert not is_even(len(moves))
+        mv = call_llm('black', moves)
+        return mv
+
+class Human():
+    def __init__(self):
+        pass
+    def get_next_move(self, moves):
+        mv = input()
+        return mv
+
+#sf_params = {"Minimum Thinking Time": 0.01}
+# sf_params = {'Skill Level': 1} # seems to be equiv to elo 1350!
+sf_params = {'UCI_Elo': 250}
+sf_checker = Stockfish(path=SF_PATH, parameters=sf_params)
+
+visualiser_routine = utils.printable_clean_sf_visual
+visualiser_routine = utils.printable_unicode_clean_sf_visual
+
+moves = [] # ["e2e4", ] # "e7e5"]
+#moves = moves_end_white_win[:210]
+
+#player1 = Human()
+#player2 = SF(UCI_Elo=250)
+
+player1 = SF(skill_level=1)
+player2 = LLM1()
+
+#player1 = SF(skill_level=1)
+#player2 = SFBadBot()
+#player2 = LLM1()
+
+def get_a_move(sf_checker, moves, player):
+    """Get a legal move, choose randomly if forced to"""
+    n = 0
+    while True:
+        #mv = input('Move:')
+        sf_checker.set_position(moves)
+        mv = player.get_next_move(moves)
+        #if mv == 'quit':
+        #    sys.exit()
+        if sf_checker.is_move_correct(mv):
+            break
+        else:
+            print(f'Bad move: {mv} {n}')
+            n += 1
+        if n == 10:
+            # too many bad moves
+            legal_good_moves = sf_checker.get_top_moves(10)
+            #[{'Move': 'd2d4', 'Centipawn': 39, 'Mate': None},
+            # {'Move': 'e2e4', 'Centipawn': 38, 'Mate': None},
+            # ...            
+            random.shuffle(legal_good_moves)
+            mv = legal_good_moves[0]['Move']
+            break
+    return mv
+
+
+def is_even(n):
+    return int(n/2) == n/2
+
+while True:
+    print("Moves:", moves)
+    sf_checker.set_position(moves)
+    print(visualiser_routine(sf_checker)) 
+    
+    assert is_even(len(moves)), f"For player1 we expect 0, 2, 4 etc moves, got {len(moves)}"
+    mv1 = get_a_move(sf_checker, moves, player1)
+    sf_checker.make_moves_from_current_position([mv1])
+    eval1 = sf_checker.get_evaluation()
+    print(eval1)
+    moves.append(mv1)
+    if eval1['type'] == 'mate' and eval1['value'] == 0:
+        print("mate for white")
+        break
+
+    assert not is_even(len(moves)), f"For player2 we expect 1, 3, 5 etc moves, got {len(moves)}"
+    mv2 = get_a_move(sf_checker, moves, player2)
+    sf_checker.make_moves_from_current_position([mv2])
+    eval2 = sf_checker.get_evaluation()
+    print(eval2)
+    moves.append(mv2)
+    if eval2['type'] == 'mate' and eval2['value'] == 0:
+        print("mate for black")
+        break
+    
+
+
+# sf.is_move_correct('e1d2') # if blocked
+# sf.get_top_moves(10)
