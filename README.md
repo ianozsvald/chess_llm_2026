@@ -2,6 +2,21 @@ conda activate basepython312
 expt_chess$ . .venv/bin/activate
 
 
+# Tests
+
+```
+fswatch -r -x *.py | while read file event; do
+    clear
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Change detected in $file ($event)"
+    pytest
+    sleep 1
+done
+```
+
+
+# Notes
+
+
 ## 20251217
 
 * p_vs_p.py player vs player
