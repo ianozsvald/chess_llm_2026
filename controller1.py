@@ -1,4 +1,5 @@
 import random
+import sys
 
 from stockfish import Stockfish
 
@@ -7,7 +8,7 @@ from llm_openai import call_llm
 
 SF_PATH = "/usr/games/stockfish"
 
-# get_evaluation - type cp and a value, or mate and value, mate value 0 is end?
+# get_evaluation - type cp (centipawn) and a value, or mate and value, mate value 0 is end?
 
 
 class SF:
@@ -40,10 +41,11 @@ class SFBadBot:
 
 
 class LLM1:
-    def __init__(self):
+    def __init__(self, visualiser_routine):
         # we need a stockfish to describe the board state
         sfi = Stockfish(path=SF_PATH)
         self.sfi = sfi
+        self.visualiser_routine = visualiser_routine
 
     def get_next_move(self, moves):
         assert not is_even(len(moves))
@@ -51,7 +53,8 @@ class LLM1:
         # get a board position like
         # 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         fen = self.sfi.get_fen_position()
-        mv = call_llm("black", moves, fen=fen)
+        board_render = self.visualiser_routine(self.sfi)
+        mv = call_llm("black", moves, fen=fen, board_render=board_render)
         return mv
 
 
@@ -79,7 +82,7 @@ moves = []  # ["e2e4", ] # "e7e5"]
 # player2 = SF(UCI_Elo=250)
 
 player1 = SF(skill_level=1)
-player2 = LLM1()
+player2 = LLM1(visualiser_routine)
 
 # player1 = SF(skill_level=1)
 # player2 = SFBadBot()
@@ -89,18 +92,21 @@ player2 = LLM1()
 def get_a_move(sf_checker, moves, player):
     """Get a legal move, choose randomly if forced to"""
     n = 0
+    MAX_BAD_MOVES = 3
     while True:
         # mv = input('Move:')
         sf_checker.set_position(moves)
         mv = player.get_next_move(moves)
-        # if mv == 'quit':
-        #    sys.exit()
+        if mv == "quit":
+            sys.exit()
+        if mv == "resign":
+            sys.exit()
         if sf_checker.is_move_correct(mv):
             break
         else:
-            print(f"Bad move: {mv} {n}")
+            print(f"--Bad move: {mv} on try {n} of {MAX_BAD_MOVES}")
             n += 1
-        if n == 10:
+        if n == MAX_BAD_MOVES:
             # too many bad moves
             legal_good_moves = sf_checker.get_top_moves(10)
             # [{'Move': 'd2d4', 'Centipawn': 39, 'Mate': None},
@@ -108,6 +114,9 @@ def get_a_move(sf_checker, moves, player):
             # ...
             random.shuffle(legal_good_moves)
             mv = legal_good_moves[0]["Move"]
+            print(
+                "---Too many bad moves, had to choose a random good move instead\n--------\n"
+            )
             break
     return mv
 

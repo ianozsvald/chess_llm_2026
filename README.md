@@ -55,7 +55,7 @@ pre-commit install --hook-type pre-commit
 
 * p_vs_p.py player vs player
 
-Note that black castle top-right is 'e8g8', also e1g1 for white.
+Note that black castle top-right is 'e8g8', also e1g1 for white. black e8c8 (castle queenside?)
 
 Note that we need a WHITE terminal if we're working with unicode graphics, else they appear to be inverted
 
