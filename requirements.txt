@@ -2,3 +2,4 @@ stockfish
 pytest
 jinja2
 pre-commit
+pytest-cov

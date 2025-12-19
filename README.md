@@ -1,8 +1,21 @@
+
+# Goals
+
+* Let me experiment with chess, UCI
+* experiment with solving chess using LLMs and different board representations
+
+# Setup
+
+```
+# created this using basepython conda env and a python -m venv .venv
 conda activate basepython312
 expt_chess$ . .venv/bin/activate
-
+pip install -r requirements.txt
+```
 
 # Tests
+
+`pytest` will run all your tests. If you setup `pre-commit` then any commits will kick off `isort`, `ruff` and `pytest`.
 
 ```
 fswatch -r -x *.py | while read file event; do
@@ -13,8 +26,29 @@ fswatch -r -x *.py | while read file event; do
 done
 ```
 
+## `coverage`
+
+`python -m pytest --cov=. --cov-report=html` will run an HTML coverage report, view with `open htmlcov/index.html` in a browser.
+
+
+
+## pre-commit
+
+```
+# pre-commit, on .pre-commit-config.yaml
+# note we don't need ruff & isort in the main requirements.txt file
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-commit
+```
+
 
 # Notes
+
+## git
+
+* `git switch -c new-branch`
+
 
 
 ## 20251217
