@@ -17,10 +17,11 @@ def call_llm(colour, moves, fen=None, board_render=None):
     llm_input += f"The current board state using FEN is {fen}.\n"
     # llm_input += f"Graphically the board can be represented as:\n{board_render}\n"
     # llm_input += f"The moves played so far (UCI format) since the start of the game are:\n{', '.join(moves)}\n"
-    llm_input += "Do not use PGN or other formats e.g. Nf6 cannot be used, you must use the 4 character UCI format.\n"
+    llm_input += "Do not use PGN or other formats e.g. Nf6 cannot be used, e2-e4 cannot be used, you must use the 4 character UCI format.\n"
+    llm_input += "The 4 character UCI format looks like a2a4 i.e. a lowercase letter, number, letter, number.\n"
     llm_input += "Moves are described only by UCI format eg a2a3, b1c3, h8h5.\n"
     llm_input += "You will choose the next move using UCI notation. If you can't win, you can choose to resign.\n"
-    llm_input += "Choose your next move (using UCI format) or write 'resign' without quotes, and nothing else:"
+    llm_input += "Choose your next move (using the 4 character UCI format) or write 'resign' without quotes, and nothing else:"
 
     print(llm_input)
     model = "meta-llama-3.1-8b-instruct"
