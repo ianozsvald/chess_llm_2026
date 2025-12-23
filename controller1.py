@@ -3,6 +3,7 @@ import sys
 
 from stockfish import Stockfish
 
+import db
 import utils
 from llm_openai import call_llm
 
@@ -93,6 +94,8 @@ def get_a_move(sf_checker, moves, player):
     """Get a legal move, choose randomly if forced to"""
     n = 0
     MAX_BAD_MOVES = 3
+    is_legal_move = False
+    move_was_rnd_choice = False
     while True:
         # mv = input('Move:')
         sf_checker.set_position(moves)
@@ -102,6 +105,7 @@ def get_a_move(sf_checker, moves, player):
         if mv == "resign":
             sys.exit()
         if sf_checker.is_move_correct(mv):
+            is_legal_move = True
             break
         else:
             print(f"--Bad move: `{mv}` on try {n} of {MAX_BAD_MOVES}--")
@@ -109,6 +113,7 @@ def get_a_move(sf_checker, moves, player):
         if n == MAX_BAD_MOVES:
             # too many bad moves
             legal_good_moves = sf_checker.get_top_moves(10)
+            move_was_rnd_choice = True
             # [{'Move': 'd2d4', 'Centipawn': 39, 'Mate': None},
             # {'Move': 'e2e4', 'Centipawn': 38, 'Mate': None},
             # ...
@@ -118,6 +123,22 @@ def get_a_move(sf_checker, moves, player):
                 "---Too many bad moves, had to choose a random good move instead\n--------\n"
             )
             break
+
+    move = len(moves)
+    game_step = int(move / 2)
+    is_white = is_even(move)
+    engine = type(player).__name__
+    move_attempt = n
+
+    db.write_row(
+        game_step,
+        move,
+        is_white,
+        is_legal_move,
+        engine,
+        move_attempt,
+        move_was_rnd_choice,
+    )
     return mv
 
 
@@ -125,34 +146,37 @@ def is_even(n):
     return int(n / 2) == n / 2
 
 
-while True:
-    print("Moves:", moves)
-    sf_checker.set_position(moves)
-    print(visualiser_routine(sf_checker))
+if __name__ == "__main__":
+    db.create_table()
 
-    assert is_even(len(moves)), (
-        f"For player1 we expect 0, 2, 4 etc moves, got {len(moves)}"
-    )
-    mv1 = get_a_move(sf_checker, moves, player1)
-    sf_checker.make_moves_from_current_position([mv1])
-    eval1 = sf_checker.get_evaluation()
-    print(eval1)
-    moves.append(mv1)
-    if eval1["type"] == "mate" and eval1["value"] == 0:
-        print("mate for white")
-        break
+    while True:
+        print("Moves:", moves)
+        sf_checker.set_position(moves)
+        print(visualiser_routine(sf_checker))
 
-    assert not is_even(len(moves)), (
-        f"For player2 we expect 1, 3, 5 etc moves, got {len(moves)}"
-    )
-    mv2 = get_a_move(sf_checker, moves, player2)
-    sf_checker.make_moves_from_current_position([mv2])
-    eval2 = sf_checker.get_evaluation()
-    print(eval2)
-    moves.append(mv2)
-    if eval2["type"] == "mate" and eval2["value"] == 0:
-        print("mate for black")
-        break
+        assert is_even(len(moves)), (
+            f"For player1 we expect 0, 2, 4 etc moves, got {len(moves)}"
+        )
+        mv1 = get_a_move(sf_checker, moves, player1)
+        sf_checker.make_moves_from_current_position([mv1])
+        eval1 = sf_checker.get_evaluation()
+        print(eval1)
+        moves.append(mv1)
+        if eval1["type"] == "mate" and eval1["value"] == 0:
+            print("mate for white")
+            break
+
+        assert not is_even(len(moves)), (
+            f"For player2 we expect 1, 3, 5 etc moves, got {len(moves)}"
+        )
+        mv2 = get_a_move(sf_checker, moves, player2)
+        sf_checker.make_moves_from_current_position([mv2])
+        eval2 = sf_checker.get_evaluation()
+        print(eval2)
+        moves.append(mv2)
+        if eval2["type"] == "mate" and eval2["value"] == 0:
+            print("mate for black")
+            break
 
 
 # sf.is_move_correct('e1d2') # if blocked

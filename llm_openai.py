@@ -14,7 +14,8 @@ load_dotenv()
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1", api_key=os.getenv("OPENROUTER_API_KEY")
 )
-model = "deepseek/deepseek-v3.1-terminus"
+# model = "deepseek/deepseek-v3.1-terminus"
+model = "meta-llama/llama-4-scout"
 
 
 def call_llm(colour, moves, fen=None, board_render=None):
