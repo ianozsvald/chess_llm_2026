@@ -50,6 +50,10 @@ pre-commit install --hook-type pre-commit
 * `git switch -c new-branch`
 
 
+# 20251223
+
+`model = 'deepseek/deepseek-v3.1-terminus'` likes to write explanations, it can't just give a move. It also writes e.g. e4-e5 or **e7e6**
+
 
 ## 20251217
 

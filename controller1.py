@@ -104,7 +104,7 @@ def get_a_move(sf_checker, moves, player):
         if sf_checker.is_move_correct(mv):
             break
         else:
-            print(f"--Bad move: {mv} on try {n} of {MAX_BAD_MOVES}")
+            print(f"--Bad move: `{mv}` on try {n} of {MAX_BAD_MOVES}--")
             n += 1
         if n == MAX_BAD_MOVES:
             # too many bad moves
