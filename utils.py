@@ -1,3 +1,6 @@
+SF_PATH = "/usr/games/stockfish"
+
+
 def printable_clean_sf_visual(sf):
     """Remove visual noise from stockfish visual display"""
     cleaner = (

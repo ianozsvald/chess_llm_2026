@@ -42,6 +42,9 @@ pre-commit install
 pre-commit install --hook-type pre-commit
 ```
 
+# Todo
+
+* add unit test to make a full prompt in llm_openai module inc FEN and board
 
 # Notes
 
@@ -52,7 +55,9 @@ pre-commit install --hook-type pre-commit
 
 # 20251223
 
-`model = 'deepseek/deepseek-v3.1-terminus'` likes to write explanations, it can't just give a move. It also writes e.g. e4-e5 or **e7e6**
+* `model = 'deepseek/deepseek-v3.1-terminus'` likes to write explanations, it can't just give a move. It also writes e.g. e4-e5 or **e7e6**
+* model llama 4 scout - plays what looks like a sensible move but it doesn't wrap it in ``` !
+* model glm 4.7 - seems to play ok
 
 
 ## 20251217

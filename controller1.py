@@ -6,15 +6,15 @@ from stockfish import Stockfish
 import db
 import utils
 from llm_openai import call_llm
-
-SF_PATH = "/usr/games/stockfish"
+from utils import SF_PATH
 
 # get_evaluation - type cp (centipawn) and a value, or mate and value, mate value 0 is end?
 
 
 class SF:
-    def __init__(self, skill_level=1):
-        sf_params = {"Skill Level": skill_level}
+    def __init__(self, uci_elo=250):
+        # sf_params = {"Skill Level": skill_level}
+        sf_params = {"UCI_Elo": uci_elo}
         sfi = Stockfish(path=SF_PATH, parameters=sf_params)
         self.sfi = sfi
 
@@ -28,8 +28,9 @@ class SF:
 class SFBadBot:
     """Makes random or bad moves"""
 
-    def __init__(self, skill_level=1):
-        sf_params = {"Skill Level": skill_level}
+    def __init__(self, uci_elo=250):
+        # sf_params = {"Skill Level": skill_level}
+        sf_params = {"UCI_Elo": uci_elo}
         sfi = Stockfish(path=SF_PATH, parameters=sf_params)
         self.sfi = sfi
 
@@ -41,9 +42,10 @@ class SFBadBot:
         return mv
 
 
-class LLM1:
-    def __init__(self, visualiser_routine):
+class LLM:
+    def __init__(self, visualiser_routine, model_name):
         # we need a stockfish to describe the board state
+        self.model_name = model_name
         sfi = Stockfish(path=SF_PATH)
         self.sfi = sfi
         self.visualiser_routine = visualiser_routine
@@ -55,7 +57,13 @@ class LLM1:
         # 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         fen = self.sfi.get_fen_position()
         board_render = self.visualiser_routine(self.sfi)
-        mv = call_llm("black", moves, fen=fen, board_render=board_render)
+        mv = call_llm(
+            "black",
+            moves,
+            fen=fen,
+            board_render=board_render,
+            model_name=self.model_name,
+        )
         return mv
 
 
@@ -82,8 +90,9 @@ moves = []  # ["e2e4", ] # "e7e5"]
 # player1 = Human()
 # player2 = SF(UCI_Elo=250)
 
-player1 = SF(skill_level=1)
-player2 = LLM1(visualiser_routine)
+player1 = SF(uci_elo=250)
+# player2 = LLM(visualiser_routine, 'z-ai/glm-4.7')
+player2 = LLM(visualiser_routine, "deepseek/deepseek-v3.1-terminus")
 
 # player1 = SF(skill_level=1)
 # player2 = SFBadBot()
