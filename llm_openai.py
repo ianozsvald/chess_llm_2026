@@ -54,6 +54,7 @@ def call_llm(colour, moves, fen=None, board_render=None, model_name=None):
     if model_name.startswith("z-ai/glm-4.7"):
         only_providers = ["z-ai"]
     extra_params = {"provider": {"allow_fallbacks": False, "only": only_providers}}
+    print(f"LLM calling with {model_name}")
     # extra_params = {}
     response = client.responses.create(
         model=model_name,

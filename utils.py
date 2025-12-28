@@ -61,11 +61,18 @@ def extract_from_triple_backticks(text):
 
     # Find all occurrences of triple backticks with content between them
     # This handles both single-line (```content```) and multi-line formats
-    pattern = r"```(?:\w*\n)?(.*?)```"
+    # Group 1 captures optional language/first-word, Group 2 captures remaining content
+    pattern = r"```(\w*)\n?(.*?)```"
     matches = re.findall(pattern, text, re.DOTALL)
 
     if not matches:
         return None
 
-    # Return the last match (the one at the end), stripped of whitespace
-    return matches[-1].strip()
+    # Get the last match
+    lang_or_content, content = matches[-1]
+
+    # If content is empty, the first group was actually the content (not a language)
+    if not content.strip() and lang_or_content:
+        return lang_or_content.strip()
+
+    return content.strip()

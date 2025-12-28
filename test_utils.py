@@ -74,6 +74,31 @@ So my move:
     assert result == "f5e6", f"Expected 'f5e6', got '{result}'"
 
 
+def test_extract_from_triple_backticks2():
+    input_text = """My next move is:
+```d7d5
+```
+"""
+    result = extract_from_triple_backticks(input_text)
+    assert result == "d7d5", f"Expected 'd7d5', got '{result}'"
+
+    input_text = """My next move is:
+```text
+d7d5
+```
+"""
+    result = extract_from_triple_backticks(input_text)
+    assert result == "d7d5", f"Expected 'd7d5', got '{result}'"
+
+    input_text = """
+**Best move:**
+```
+g8f6
+``` """
+    result = extract_from_triple_backticks(input_text)
+    assert result == "g8f6", f"Expected 'g8f6', got '{result}'"
+
+
 if __name__ == "__main__":
     test_printable_clean_sf_visual_starting_position()
     test_printable_clean_sf_visual_no_dots()
