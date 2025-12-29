@@ -54,7 +54,9 @@ def call_llm(colour, moves, fen=None, board_render=None, model_name=None):
     if model_name.startswith("z-ai/glm-4.7"):
         only_providers = ["z-ai"]
     if model_name.startswith("anthropic"):
-        only_providers = ["anthropic"]
+        only_providers = None  # ["anthropic"] gives 521 and 520 errors intermittently
+    if model_name.startswith("openai"):
+        only_providers = None
     extra_params = {"provider": {"allow_fallbacks": False, "only": only_providers}}
     print(f"LLM calling with {model_name}")
     # extra_params = {}

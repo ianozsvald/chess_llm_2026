@@ -93,6 +93,7 @@ moves = []  # ["e2e4", ] # "e7e5"]
 player1 = SF(uci_elo=250)
 model = "anthropic/claude-opus-4.5"
 # model = "z-ai/glm-4.7"
+model = "openai/gpt-5.2"
 player2 = LLM(visualiser_routine, model)
 # player2 = LLM(visualiser_routine, "deepseek/deepseek-v3.1-terminus")
 # player2 = SFBadBot()

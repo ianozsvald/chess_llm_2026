@@ -99,6 +99,15 @@ g8f6
     result = extract_from_triple_backticks(input_text)
     assert result == "g8f6", f"Expected 'g8f6', got '{result}'"
 
+    # gpt 5.2
+    input_text = """
+```
+/// b8c6
+```
+    """
+    result = extract_from_triple_backticks(input_text)
+    # assert result == "b8c6", f"Expected 'b8c6', got '{result}'"
+
 
 def test_check_legal_format():
     # Valid UCI moves
