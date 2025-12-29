@@ -36,8 +36,8 @@ class SFBadBot:
 
     def get_next_move(self, moves):
         # self.sfi.set_position(moves)
-        # mv = self.sfi.get_best_move()
-        mv = "nuffin"
+        # mv = "nuffin"
+        mv = None
         print(f"SFBadBot proposes: {mv}")
         return mv
 
@@ -91,8 +91,9 @@ moves = []  # ["e2e4", ] # "e7e5"]
 # player2 = SF(UCI_Elo=250)
 
 player1 = SF(uci_elo=250)
-# player2 = LLM(visualiser_routine, 'z-ai/glm-4.7')
-player2 = LLM(visualiser_routine, "deepseek/deepseek-v3.1-terminus")
+player2 = LLM(visualiser_routine, "z-ai/glm-4.7")
+# player2 = LLM(visualiser_routine, "deepseek/deepseek-v3.1-terminus")
+# player2 = SFBadBot()
 
 # player1 = SF(skill_level=1)
 # player2 = SFBadBot()
@@ -128,6 +129,7 @@ def get_a_move(sf_checker, moves, player):
             # ...
             random.shuffle(legal_good_moves)
             mv = legal_good_moves[0]["Move"]
+            assert sf_checker.is_move_correct(mv), f"We expect mv {mv} to be legal"
             print(
                 "---Too many bad moves, had to choose a random good move instead\n--------\n"
             )
