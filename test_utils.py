@@ -1,6 +1,7 @@
 from stockfish import Stockfish
 
 from utils import (
+    check_legal_format,
     extract_from_triple_backticks,
     printable_clean_sf_visual,
     printable_clean_sf_visual_no_dots,
@@ -99,9 +100,39 @@ g8f6
     assert result == "g8f6", f"Expected 'g8f6', got '{result}'"
 
 
+def test_check_legal_format():
+    # Valid UCI moves
+    assert check_legal_format("e2e4") is True
+    assert check_legal_format("c1d3") is True
+    assert check_legal_format("f4f5") is True
+    assert check_legal_format("a1h8") is True
+    assert check_legal_format("h7h8") is True
+
+    # Resign is valid
+    assert check_legal_format("resign") is True
+
+    # Misspellings of resign
+    assert check_legal_format("Resign") is False
+    assert check_legal_format("RESIGN") is False
+    assert check_legal_format("resgin") is False
+    assert check_legal_format("resgn") is False
+    assert check_legal_format("resignn") is False
+
+    # Invalid formats
+    assert check_legal_format("e2") is False  # Too short
+    assert check_legal_format("e2e4e5") is False  # Too long
+    assert check_legal_format("E2E4") is False  # Uppercase
+    assert check_legal_format("e9e4") is False  # Invalid row
+    assert check_legal_format("i2e4") is False  # Invalid column
+    assert check_legal_format("2e4e") is False  # Wrong order
+    assert check_legal_format("") is False  # Empty
+    assert check_legal_format("move") is False  # Random word
+
+
 if __name__ == "__main__":
     test_printable_clean_sf_visual_starting_position()
     test_printable_clean_sf_visual_no_dots()
     test_printable_unicode_clean_sf_visual()
     test_extract_from_triple_backticks()
+    test_check_legal_format()
     print("All tests passed!")

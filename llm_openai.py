@@ -53,6 +53,8 @@ def call_llm(colour, moves, fen=None, board_render=None, model_name=None):
         only_providers = ["atlas-cloud"]
     if model_name.startswith("z-ai/glm-4.7"):
         only_providers = ["z-ai"]
+    if model_name.startswith("anthropic"):
+        only_providers = ["anthropic"]
     extra_params = {"provider": {"allow_fallbacks": False, "only": only_providers}}
     print(f"LLM calling with {model_name}")
     # extra_params = {}

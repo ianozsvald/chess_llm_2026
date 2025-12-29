@@ -76,3 +76,26 @@ def extract_from_triple_backticks(text):
         return lang_or_content.strip()
 
     return content.strip()
+
+
+def check_legal_format(proposed_move):
+    """Check if a move is in valid UCI format or is 'resign'.
+
+    A valid UCI move is exactly 4 characters: lowercase letter, digit,
+    lowercase letter, digit (e.g., 'e2e4', 'c1d3').
+    The word 'resign' is also accepted.
+
+    Returns True if the format is valid, False otherwise.
+    """
+    if proposed_move == "resign":
+        return True
+
+    if len(proposed_move) != 4:
+        return False
+
+    return (
+        proposed_move[0] in "abcdefgh"
+        and proposed_move[1] in "12345678"
+        and proposed_move[2] in "abcdefgh"
+        and proposed_move[3] in "12345678"
+    )
