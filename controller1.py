@@ -1,3 +1,4 @@
+import math
 import random
 import sys
 
@@ -91,7 +92,7 @@ moves = []  # ["e2e4", ] # "e7e5"]
 # player2 = SF(UCI_Elo=250)
 
 player1 = SF(uci_elo=250)
-model = "anthropic/claude-opus-4.5"
+# model = "anthropic/claude-opus-4.5"
 # model = "z-ai/glm-4.7"
 model = "openai/gpt-5.2"
 player2 = LLM(visualiser_routine, model)
@@ -164,6 +165,7 @@ if __name__ == "__main__":
     db.create_table()
 
     while True:
+        print(f"(Pair) Move nbr: {math.ceil((len(moves) + 1) / 2)}")
         print("Moves:", moves)
         sf_checker.set_position(moves)
         print(visualiser_routine(sf_checker))

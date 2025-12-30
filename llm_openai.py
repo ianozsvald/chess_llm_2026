@@ -32,6 +32,7 @@ def make_prompt(colour, moves, fen, board_render):
         "The 4 character UCI format is a lowercase letter, number, letter, number.\n"
     )
     llm_input += "You will choose the next move using UCI notation. If you can't win, you can choose to resign.\n"
+    llm_input += f"First analyse the board state and provide brief commentary from your position as the {colour} player.\n"
     llm_input += "Choose your next move (using the 4 character UCI format) or write 'resign' inside triple-back-ticks like ``` on the following line:"
     return instructions, llm_input
 
