@@ -73,9 +73,17 @@ def extract_from_triple_backticks(text):
 
     # If content is empty, the first group was actually the content (not a language)
     if not content.strip() and lang_or_content:
-        return lang_or_content.strip()
+        result = lang_or_content.strip()
+    else:
+        result = content.strip()
 
-    return content.strip()
+    # Strip leading comment markers (e.g., "/// " or "// " from GPT 5.2 outputs)
+    if result.startswith("///"):
+        result = result[3:].strip()
+    elif result.startswith("//"):
+        result = result[2:].strip()
+
+    return result
 
 
 def check_legal_format(proposed_move):

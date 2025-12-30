@@ -44,6 +44,7 @@ pre-commit install --hook-type pre-commit
 
 # Todo
 
+* integrate the check for a legal clean move
 * add unit test to make a full prompt in llm_openai module inc FEN and board
 
 # Notes
