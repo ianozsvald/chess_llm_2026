@@ -194,6 +194,13 @@ def play_game(moves, sf_checker, visualiser_routine, player1, player2, db_filena
     return game_end_reason
 
 
+def write_outcome(db_filename, dt_end, dt_start, game_end_reason, player1, player2):
+    f.write(f"Made: {db_filename}\n")
+    f.write(f"{player1} vs {player2}\n")
+    f.write(f"Game took {dt_end - dt_start}\n")
+    f.write(f"{game_end_reason=}\n")
+
+
 if __name__ == "__main__":
     # sf_params = {"Minimum Thinking Time": 0.01}
     # sf_params = {'Skill Level': 1} # seems to be equiv to elo 1350!
@@ -208,13 +215,14 @@ if __name__ == "__main__":
     # player1 = Human()
     # player2 = SF(UCI_Elo=250)
 
-    player1 = SF(uci_elo=500)
+    player1 = SF(uci_elo=100)
     # model = "anthropic/claude-opus-4.5"
     # model = "z-ai/glm-4.7"
     model = "openai/gpt-5.2"
     player2 = LLM(visualiser_routine, model)
     # player2 = LLM(visualiser_routine, "deepseek/deepseek-v3.1-terminus")
     # player2 = SFBadBot()
+    player2 = SF(uci_elo=500)
 
     # player1 = SF(skill_level=1)
     # player2 = SFBadBot()
@@ -223,25 +231,30 @@ if __name__ == "__main__":
 
     dt_start = datetime.datetime.now(datetime.UTC)
     expt_folder_name = utils.create_timestamped_folder()
-    for game_nbr in range(3):
+    expt_folder = pathlib.Path(expt_folder_name)
+    for game_nbr in range(1):
         print(f"{game_nbr=}")
-        db_folder = pathlib.Path(expt_folder_name) / str(game_nbr)
+        db_folder = expt_folder / str(game_nbr)
         os.makedirs(db_folder, exist_ok=False)
         db_filename = db_folder / "moves.sqlite"
         db.create_table(db_filename)
         print(f"Made: {db_filename}")
 
         moves = []
+        # we can force a certain game here:
+        # import game_samples
+        # moves = game_samples.moves_end_white_win2[:-2] # all but last two moves, white to start
         game_end_reason = play_game(
             moves, sf_checker, visualiser_routine, player1, player2, db_filename
         )
         dt_end = datetime.datetime.now(datetime.UTC)
         print(f"Game took {dt_end - dt_start}")
         with open(pathlib.Path(expt_folder_name) / "report.txt", "a") as f:
-            f.write(f"Made: {db_filename}")
-            f.write(f"Game took {dt_end - dt_start}")
-            f.write(f"{game_end_reason=}")
+            write_outcome(
+                db_filename, dt_end, dt_start, game_end_reason, player1, player2
+            )
 
+    print(f"Outcome in:\n{expt_folder}")
 
 # sf.is_move_correct('e1d2') # if blocked
 # sf.get_top_moves(10)

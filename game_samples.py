@@ -217,6 +217,7 @@ moves_end_white_win = [
 ]  # sf_checker.get_evaluation() {'type': 'mate', 'value': 0}, 215 moves
 # so I think mate-in of 0 means mate, mate-in 1 etc means mate in that nbr moves
 
+# 82 items, white wins, we can start at move 80 for white to play the last moves
 moves_end_white_win2 = [
     "e2e4",
     "e7e5",

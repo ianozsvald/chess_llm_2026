@@ -115,5 +115,5 @@ def check_legal_format(proposed_move):
 def create_timestamped_folder():
     """Create a folder named with current UTC datetime and return the folder name."""
     folder_name = datetime.now(timezone.utc).strftime("%Y%m%dT%H_%M_%S")
-    os.makedirs(folder_name, exist_ok=False)
+    os.makedirs("expts/" + folder_name, exist_ok=False)
     return folder_name

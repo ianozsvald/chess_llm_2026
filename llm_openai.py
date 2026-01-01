@@ -1,3 +1,4 @@
+import json
 import os
 
 from dotenv import load_dotenv
@@ -61,12 +62,17 @@ def call_llm(colour, moves, fen=None, board_render=None, model_name=None):
     extra_params = {"provider": {"allow_fallbacks": False, "only": only_providers}}
     print(f"LLM calling with {model_name}")
     # extra_params = {}
-    response = client.responses.create(
-        model=model_name,
-        instructions=instructions,
-        input=llm_input,
-        extra_body=extra_params,
-    )
+    while True:
+        try:
+            response = client.responses.create(
+                model=model_name,
+                instructions=instructions,
+                input=llm_input,
+                extra_body=extra_params,
+            )
+            break  # jump out if we're successful
+        except json.JSONDecodeError:
+            print("Oops, got a JSONDecodeError after calling LLM")
 
     print(f"Raw return from llm call:\n{response.output_text}")
     extracted = utils.extract_from_triple_backticks(response.output_text)
