@@ -49,6 +49,11 @@ pre-commit install --hook-type pre-commit
 
 # Notes
 
+## db
+
+* `sqlite3 expt.sqlite "SELECT * FROM game_moves;`
+* `select * from game_moves where move_attempt > 0;`
+
 ## git
 
 * `git switch -c new-branch`
@@ -56,9 +61,11 @@ pre-commit install --hook-type pre-commit
 
 # 20251223
 
+* using elo 250 stockfish, it beats 3.1 terminus and glm 4.7
 * `model = 'deepseek/deepseek-v3.1-terminus'` likes to write explanations, it can't just give a move. It also writes e.g. e4-e5 or **e7e6**
 * model llama 4 scout - plays what looks like a sensible move but it doesn't wrap it in ``` !
 * model glm 4.7 - seems to play ok
+* elo 250 vs gpt 5.2 results in a balck win! at elo 250 it can resign or lose. it still makes illegal moves
 
 
 ## 20251217

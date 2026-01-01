@@ -1,3 +1,6 @@
+import os
+from datetime import datetime, timezone
+
 SF_PATH = "/usr/games/stockfish"
 
 
@@ -107,3 +110,10 @@ def check_legal_format(proposed_move):
         and proposed_move[2] in "abcdefgh"
         and proposed_move[3] in "12345678"
     )
+
+
+def create_timestamped_folder():
+    """Create a folder named with current UTC datetime and return the folder name."""
+    folder_name = datetime.now(timezone.utc).strftime("%Y%m%dT%H_%M_%S")
+    os.makedirs(folder_name, exist_ok=False)
+    return folder_name

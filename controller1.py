@@ -1,4 +1,7 @@
+import datetime
 import math
+import os
+import pathlib
 import random
 import sys
 
@@ -13,10 +16,13 @@ from utils import SF_PATH
 
 
 class SF:
-    def __init__(self, uci_elo=250):
+    def __init__(self, uci_elo=500):
         # sf_params = {"Skill Level": skill_level}
+        self.uci_elo = uci_elo
+        print(f"Making SF bot with elo {uci_elo}")
         sf_params = {"UCI_Elo": uci_elo}
         sfi = Stockfish(path=SF_PATH, parameters=sf_params)
+        # 'UCI_LimitStrength': 'true', set from false to true when elo set in get_parameters
         self.sfi = sfi
 
     def get_next_move(self, moves):
@@ -25,12 +31,16 @@ class SF:
         print(f"SF proposes: {mv}")
         return mv
 
+    def __str__(self):
+        return f"Stockfish (ELO {self.uci_elo})"
+
 
 class SFBadBot:
     """Makes random or bad moves"""
 
     def __init__(self, uci_elo=250):
         # sf_params = {"Skill Level": skill_level}
+        self.uci_elo = uci_elo
         sf_params = {"UCI_Elo": uci_elo}
         sfi = Stockfish(path=SF_PATH, parameters=sf_params)
         self.sfi = sfi
@@ -41,6 +51,9 @@ class SFBadBot:
         mv = None
         print(f"SFBadBot proposes: {mv}")
         return mv
+
+    def __str__(self):
+        return f"Stockfish BadBot (ELO {self.uci_elo})"
 
 
 class LLM:
@@ -67,6 +80,9 @@ class LLM:
         )
         return mv
 
+    def __str__(self):
+        return f"LLM ({self.model_name})"
+
 
 class Human:
     def __init__(self):
@@ -76,35 +92,11 @@ class Human:
         mv = input()
         return mv
 
-
-# sf_params = {"Minimum Thinking Time": 0.01}
-# sf_params = {'Skill Level': 1} # seems to be equiv to elo 1350!
-sf_params = {"UCI_Elo": 250}
-sf_checker = Stockfish(path=SF_PATH, parameters=sf_params)
-
-visualiser_routine = utils.printable_clean_sf_visual
-visualiser_routine = utils.printable_unicode_clean_sf_visual
-
-moves = []  # ["e2e4", ] # "e7e5"]
-# moves = moves_end_white_win[:210]
-
-# player1 = Human()
-# player2 = SF(UCI_Elo=250)
-
-player1 = SF(uci_elo=250)
-# model = "anthropic/claude-opus-4.5"
-# model = "z-ai/glm-4.7"
-model = "openai/gpt-5.2"
-player2 = LLM(visualiser_routine, model)
-# player2 = LLM(visualiser_routine, "deepseek/deepseek-v3.1-terminus")
-# player2 = SFBadBot()
-
-# player1 = SF(skill_level=1)
-# player2 = SFBadBot()
-# player2 = LLM1()
+    def __str__(self):
+        return "Human"
 
 
-def get_a_move(sf_checker, moves, player):
+def get_a_move(sf_checker, moves, player, db_filename):
     """Get a legal move, choose randomly if forced to"""
     n = 0
     MAX_BAD_MOVES = 3
@@ -146,6 +138,7 @@ def get_a_move(sf_checker, moves, player):
     move_attempt = n
 
     db.write_row(
+        db_filename,
         game_step,
         move,
         is_white,
@@ -153,6 +146,7 @@ def get_a_move(sf_checker, moves, player):
         engine,
         move_attempt,
         move_was_rnd_choice,
+        uci_move=mv,
     )
     return mv
 
@@ -161,9 +155,11 @@ def is_even(n):
     return int(n / 2) == n / 2
 
 
-if __name__ == "__main__":
-    db.create_table()
-
+def play_game(moves, sf_checker, visualiser_routine, player1, player2, db_filename):
+    # moves = []  # ["e2e4", ] # "e7e5"]
+    # if not moves:
+    #    moves = []
+    game_end_reason = ""
     while True:
         print(f"(Pair) Move nbr: {math.ceil((len(moves) + 1) / 2)}")
         print("Moves:", moves)
@@ -173,26 +169,78 @@ if __name__ == "__main__":
         assert is_even(len(moves)), (
             f"For player1 we expect 0, 2, 4 etc moves, got {len(moves)}"
         )
-        mv1 = get_a_move(sf_checker, moves, player1)
+        mv1 = get_a_move(sf_checker, moves, player1, db_filename)
         sf_checker.make_moves_from_current_position([mv1])
         eval1 = sf_checker.get_evaluation()
         print(eval1)
         moves.append(mv1)
         if eval1["type"] == "mate" and eval1["value"] == 0:
-            print("mate for white")
+            # print("mate for white")
+            game_end_reason = "mate for white"
             break
 
         assert not is_even(len(moves)), (
             f"For player2 we expect 1, 3, 5 etc moves, got {len(moves)}"
         )
-        mv2 = get_a_move(sf_checker, moves, player2)
+        mv2 = get_a_move(sf_checker, moves, player2, db_filename)
         sf_checker.make_moves_from_current_position([mv2])
         eval2 = sf_checker.get_evaluation()
         print(eval2)
         moves.append(mv2)
         if eval2["type"] == "mate" and eval2["value"] == 0:
-            print("mate for black")
+            # print("mate for black")
+            game_end_reason = "mate for black"
             break
+    return game_end_reason
+
+
+if __name__ == "__main__":
+    # sf_params = {"Minimum Thinking Time": 0.01}
+    # sf_params = {'Skill Level': 1} # seems to be equiv to elo 1350!
+    sf_params = {"UCI_Elo": 250}
+    sf_checker = Stockfish(path=SF_PATH, parameters=sf_params)
+
+    visualiser_routine = utils.printable_clean_sf_visual
+    visualiser_routine = utils.printable_unicode_clean_sf_visual
+
+    # moves = moves_end_white_win[:210]
+
+    # player1 = Human()
+    # player2 = SF(UCI_Elo=250)
+
+    player1 = SF(uci_elo=500)
+    # model = "anthropic/claude-opus-4.5"
+    # model = "z-ai/glm-4.7"
+    model = "openai/gpt-5.2"
+    player2 = LLM(visualiser_routine, model)
+    # player2 = LLM(visualiser_routine, "deepseek/deepseek-v3.1-terminus")
+    # player2 = SFBadBot()
+
+    # player1 = SF(skill_level=1)
+    # player2 = SFBadBot()
+    # player2 = LLM1()
+    print(f"{player1} vs {player2}")
+
+    dt_start = datetime.datetime.now(datetime.UTC)
+    expt_folder_name = utils.create_timestamped_folder()
+    for game_nbr in range(3):
+        print(f"{game_nbr=}")
+        db_folder = pathlib.Path(expt_folder_name) / str(game_nbr)
+        os.makedirs(db_folder, exist_ok=False)
+        db_filename = db_folder / "moves.sqlite"
+        db.create_table(db_filename)
+        print(f"Made: {db_filename}")
+
+        moves = []
+        game_end_reason = play_game(
+            moves, sf_checker, visualiser_routine, player1, player2, db_filename
+        )
+        dt_end = datetime.datetime.now(datetime.UTC)
+        print(f"Game took {dt_end - dt_start}")
+        with open(pathlib.Path(expt_folder_name) / "report.txt", "a") as f:
+            f.write(f"Made: {db_filename}")
+            f.write(f"Game took {dt_end - dt_start}")
+            f.write(f"{game_end_reason=}")
 
 
 # sf.is_move_correct('e1d2') # if blocked
