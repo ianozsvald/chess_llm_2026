@@ -12,18 +12,22 @@ import utils
 from llm_openai import call_llm
 from utils import SF_PATH
 
+# from stockfish import Stockfish; sfx=Stockfish(path="/usr/games/stockfish", parameters={"UCI_Elo": 100})
+
+
 # get_evaluation - type cp (centipawn) and a value, or mate and value, mate value 0 is end?
 
 
 class SF:
-    def __init__(self, uci_elo=500):
-        # sf_params = {"Skill Level": skill_level}
-        self.uci_elo = uci_elo
-        print(f"Making SF bot with elo {uci_elo}")
-        sf_params = {"UCI_Elo": uci_elo}
-        sfi = Stockfish(path=SF_PATH, parameters=sf_params)
+    # def __init__(self, uci_elo=500):
+    def __init__(self, skill_level=0):
+        sf_params = {"Skill Level": skill_level}
+        # self.uci_elo = uci_elo
+        # print(f"Making SF bot with elo {uci_elo}")
+        # sf_params = {"UCI_Elo": uci_elo}
+        self.sfi = Stockfish(path=SF_PATH, parameters=sf_params)
         # 'UCI_LimitStrength': 'true', set from false to true when elo set in get_parameters
-        self.sfi = sfi
+        # assert self.sfi.get_parameters()['UCI_LimitStrength'] == 'true'
 
     def get_next_move(self, moves):
         self.sfi.set_position(moves)
@@ -32,16 +36,19 @@ class SF:
         return mv
 
     def __str__(self):
-        return f"Stockfish (ELO {self.uci_elo})"
+        # return f"Stockfish (ELO {self.sfi.get_parameters()['UCI_Elo']})"
+        return f"Stockfish (skill level {self.sfi.get_parameters()['Skill Level']})"
 
 
 class SFBadBot:
     """Makes random or bad moves"""
 
-    def __init__(self, uci_elo=250):
+    def __init__(self, skill_level=0):
+        sf_params = {"Skill Level": skill_level}
+        # def __init__(self, uci_elo=250):
         # sf_params = {"Skill Level": skill_level}
-        self.uci_elo = uci_elo
-        sf_params = {"UCI_Elo": uci_elo}
+        # self.uci_elo = uci_elo
+        # sf_params = {"UCI_Elo": uci_elo}
         sfi = Stockfish(path=SF_PATH, parameters=sf_params)
         self.sfi = sfi
 
@@ -53,7 +60,8 @@ class SFBadBot:
         return mv
 
     def __str__(self):
-        return f"Stockfish BadBot (ELO {self.uci_elo})"
+        # return f"Stockfish BadBot (ELO {self.uci_elo})"
+        return f"Stockfish (skill level {self.sfi.get_parameters()['Skill Level']})"
 
 
 class LLM:
@@ -109,7 +117,8 @@ def get_a_move(sf_checker, moves, player, db_filename):
         if mv == "quit":
             sys.exit()
         if mv == "resign":
-            sys.exit()
+            is_legal_move = True
+            break
         if sf_checker.is_move_correct(mv):
             is_legal_move = True
             break
@@ -170,6 +179,9 @@ def play_game(moves, sf_checker, visualiser_routine, player1, player2, db_filena
             f"For player1 we expect 0, 2, 4 etc moves, got {len(moves)}"
         )
         mv1 = get_a_move(sf_checker, moves, player1, db_filename)
+        if mv1 == "resign":
+            game_end_reason = "black wins, white resigns"
+            break
         sf_checker.make_moves_from_current_position([mv1])
         eval1 = sf_checker.get_evaluation()
         print(eval1)
@@ -183,6 +195,9 @@ def play_game(moves, sf_checker, visualiser_routine, player1, player2, db_filena
             f"For player2 we expect 1, 3, 5 etc moves, got {len(moves)}"
         )
         mv2 = get_a_move(sf_checker, moves, player2, db_filename)
+        if mv2 == "resign":
+            game_end_reason = "white wins, black resigns"
+            break
         sf_checker.make_moves_from_current_position([mv2])
         eval2 = sf_checker.get_evaluation()
         print(eval2)
@@ -191,6 +206,7 @@ def play_game(moves, sf_checker, visualiser_routine, player1, player2, db_filena
             # print("mate for black")
             game_end_reason = "mate for black"
             break
+    print(f"Game outcome: {game_end_reason}")
     return game_end_reason
 
 
@@ -201,38 +217,44 @@ def write_outcome(db_filename, dt_end, dt_start, game_end_reason, player1, playe
     f.write(f"{game_end_reason=}\n")
 
 
+def make_players():
+    # player1 = Human()
+    # player2 = SF(UCI_Elo=250)
+
+    # player1 = SF(uci_elo=250)
+    # model = "anthropic/claude-opus-4.5"
+    # model = "z-ai/glm-4.7"
+    # model = "deepseek/deepseek-v3.1-terminus"
+    model = "openai/gpt-5.2"
+    player2 = LLM(visualiser_routine, model)
+    # player2 = SFBadBot()
+
+    player1 = SF(skill_level=0)
+    # player2 = SF(skill_level=5)
+
+    # player1 = SF(skill_level=1)
+    # player2 = SFBadBot()
+    # player2 = LLM1()
+    return player1, player2
+
+
 if __name__ == "__main__":
-    # sf_params = {"Minimum Thinking Time": 0.01}
     # sf_params = {'Skill Level': 1} # seems to be equiv to elo 1350!
-    sf_params = {"UCI_Elo": 250}
-    sf_checker = Stockfish(path=SF_PATH, parameters=sf_params)
+    sf_checker = Stockfish(path=SF_PATH)
 
     visualiser_routine = utils.printable_clean_sf_visual
     visualiser_routine = utils.printable_unicode_clean_sf_visual
 
     # moves = moves_end_white_win[:210]
 
-    # player1 = Human()
-    # player2 = SF(UCI_Elo=250)
-
-    player1 = SF(uci_elo=100)
-    # model = "anthropic/claude-opus-4.5"
-    # model = "z-ai/glm-4.7"
-    model = "openai/gpt-5.2"
-    player2 = LLM(visualiser_routine, model)
-    # player2 = LLM(visualiser_routine, "deepseek/deepseek-v3.1-terminus")
-    # player2 = SFBadBot()
-    player2 = SF(uci_elo=500)
-
-    # player1 = SF(skill_level=1)
-    # player2 = SFBadBot()
-    # player2 = LLM1()
-    print(f"{player1} vs {player2}")
+    MAX_ITERATIONS = 3
 
     dt_start = datetime.datetime.now(datetime.UTC)
     expt_folder_name = utils.create_timestamped_folder()
     expt_folder = pathlib.Path(expt_folder_name)
-    for game_nbr in range(1):
+    for game_nbr in range(MAX_ITERATIONS):
+        player1, player2 = make_players()
+        print(f"{player1} vs {player2} over {MAX_ITERATIONS} games")
         print(f"{game_nbr=}")
         db_folder = expt_folder / str(game_nbr)
         os.makedirs(db_folder, exist_ok=False)
